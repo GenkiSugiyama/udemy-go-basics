@@ -1,12 +1,17 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"go-basics/calculator"
+	"os"
+
+	"github.com/joho/godotenv"
+)
 
 func main() {
-	fmt.Println("Hello, World")
-
-	sl := []int{1, 2, 3}
-	if len(sl) > 2 {
-		fmt.Println("code")
-	}
+	godotenv.Load()
+	fmt.Println(os.Getenv("GO_ENV"))
+	fmt.Println(calculator.Offset)
+	fmt.Println(calculator.Sum(3, 3))
+	fmt.Println(calculator.Multiply(2, 2))
 }
