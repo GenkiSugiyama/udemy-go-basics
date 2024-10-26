@@ -80,4 +80,10 @@ func main() {
 		fmt.Println(result)
 	}
 	fmt.Println(result)
+
+	// slice
+	//　配列の定義 [要素数]要素の型 で初期化 intの配列は要素数分の 0 が初期値に入る
+	var a1 [3]int
+	var a2 = [3]int{1, 2, 3}
+	a3 := [...]int{1, 2, 3}
 }
