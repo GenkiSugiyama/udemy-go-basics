@@ -99,5 +99,49 @@ func main() {
 	fmt.Println(s2 == nil)   // := で宣言された slice は nil ではない
 	s1 = append(s1, 1, 2, 3) // append(slice変数, 要素1, 要素2, ~) で既存slice に要素を追加する
 	fmt.Printf("s1: %[1]T %[1]v %v %v\n", s1, len(s1), cap(s1))
+	s3 := []int{4, 5, 6}
+	s1 = append(s1, s3...) // sliceに別のsliceを追加するときは append(追加元slice, 取り込まれるslice...) のように第二引数の slice に ...（スリードット）を繋げる
+	fmt.Printf("s1: %[1]T %[1]v %v %v\n", s1, len(s1), cap(s1))
+
+	s4 := make([]int, 0, 2) // makeメソッドを使用してsliceを宣言する make(型情報, 要素数, 容量)
+	fmt.Printf("s4: %[1]T %[1]v %v %v\n", s4, len(s4), cap(s4))
+	s4 = append(s4, 1, 2, 3, 4)
+	fmt.Printf("s4: %[1]T %[1]v %v %v\n", s4, len(s4), cap(s4))
+
+	s5 := make([]int, 4, 6)
+	fmt.Printf("s5: %[1]T %[1]v %v %v\n", s5, len(s5), cap(s5))
+	fmt.Printf("%v\n", s5[1:3])
+	s6 := s5[1:3] // slice[index:index] の指定で 左のindex<= 対象 < 右のindex の範囲の値を抽出できる 今回だとindex:1番目以上3番未満なので、要素の2番目、3番目の2つを抽出
+	fmt.Printf("s6: %[1]T %[1]v %v %v\n", s6, len(s6), cap(s6))
+	s6[1] = 10
+	fmt.Printf("s5: %[1]T %[1]v %v %v\n", s5, len(s5), cap(s5))
+	fmt.Printf("s6: %[1]T %[1]v %v %v\n", s6, len(s6), cap(s6))
+	// sliceの一部を別のsliceに代入するとそのslice同士はメモリを共有することになる
+	// 新しく宣言したsliceに値を追加すると、元のsliceの中身も書き換えられる
+	s6 = append(s6, 20)
+	fmt.Printf("s5: %[1]T %[1]v %v %v\n", s5, len(s5), cap(s5)) // s6に要素を追加するとs5の4番目（index 4）の値も書き換わる
+	fmt.Printf("s6: %[1]T %[1]v %v %v\n", s6, len(s6), cap(s6))
+
+	// map: key-valueの組み合わせ、C#のDictionaryみたいな
+	var m1 map[string]int  // map[keyの型]valueの型 でmapの宣言
+	m2 := map[string]int{} // := での宣言時は valueの型の後ろに空の {} をつける
+	fmt.Println(m1 == nil) // slice 同様 var で宣言された map は nil だが
+	fmt.Println(m2 == nil) // := で宣言されたものは nil とならない
+
+	m2["A"] = 10 // key とそれに対応するvalueのセット
+	m2["B"] = 20
+	m2["C"] = 30
+	fmt.Printf("m2: %[1]T %[1]v %v %v\n", m2, len(m2), m2["A"])
+	delete(m2, "B")
+	fmt.Printf("m2: %[1]T %[1]v %v %v\n", m2, len(m2), m2["B"]) // 存在しないkeyを呼び出すと0を返すが存在するkeyの値か、keyが存在せず返した値かは見分けられる
+
+	value, exist := m2["A"] // keyを指定して値を取り出す時の第二戻り値にそのkeyが存在するかどうかを判定するbool値がある
+	fmt.Printf("%v, %v\n", value, exist)
+	value, exist = m2["B"] // bool値の値がtrue なら存在する値を取り出した、falseならkeyが存在せず0を返した、と判定できる
+	fmt.Printf("%v, %v\n", value, exist)
+
+	for k, v := range m2 {
+		fmt.Printf("%v, %v\n", k, v)
+	} // for ～ range map {} で map 内の要素をすべて取り出す、map はハッシュマップとなっているので順番は保障されていない
 
 }
