@@ -1,8 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"unsafe"
+	"os"
+	"strings"
 )
 
 // const宣言は定数となる
@@ -152,31 +154,70 @@ func main() {
 	// } // for ～ range map {} で map 内の要素をすべて取り出す、map はハッシュマップとなっているので順番は保障されていない
 
 	// struct型の実体化
-	task1 := Task{
-		Title:    "Learn Golang",
-		Estimate: 3,
+	// task1 := Task{
+	// 	Title:    "Learn Golang",
+	// 	Estimate: 3,
+	// }
+	// task1.Title = "Learning Go"
+	// fmt.Printf("%[1]T %+[1]v, %v\n", task1, task1.Title)
+
+	// var task2 Task = task1
+	// task2.Title = "new"
+	// fmt.Printf("task1: %v task2: %v\n", task1.Title, task2.Title)
+
+	// task1p := &Task{ // 初期化時の型の先頭に & をつけてポインタを取得
+	// 	Title:    "Learn concurrency",
+	// 	Estimate: 2,
+	// }
+	// fmt.Printf("task1p: %T %+v %v\n", task1p, *task1p, unsafe.Sizeof(task1p)) // %Tで型取得、変数の頭に * をつけてポインタが示すアドレスに格納されている値を取得（この場合は直前で初期化された構造体）
+
+	// (*task1p).Title = "Changed" // デリファレンスで構造体にアクセスして値を書き換えることが可能
+	// fmt.Printf("task1p: %+v\n", *task1p)
+
+	// task1.extendEstimate()
+	// fmt.Printf("task1 value receiver: %+v\n", task1.Estimate)
+
+	// task1.extendEstimatePointer()
+	// fmt.Printf("task1 pointer receiver: %+v\n", task1.Estimate) // ポインタレシーバーを受け取る関数の処理では実体の値が変わっている
+
+	funcDefer()
+
+	files := []string{"file1.csv", "file2.csv", "file3.csv"}
+	fmt.Println(trimExtension(files...))
+
+	name, err := fileChecker("file.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
-	task1.Title = "Learning Go"
-	fmt.Printf("%[1]T %+[1]v, %v\n", task1, task1.Title)
+	fmt.Println(name)
 
-	var task2 Task = task1
-	task2.Title = "new"
-	fmt.Printf("task1: %v task2: %v\n", task1.Title, task2.Title)
+	// 無名関数
+	sample := 2
+	func(i int) { // 関数の名前を定義していない
+		fmt.Println(i)
+	}(sample) // 定義直後に()と引数を渡すことで即時実行される
 
-	task1p := &Task{ // 初期化時の型の先頭に & をつけてポインタを取得
-		Title:    "Learn concurrency",
-		Estimate: 2,
+	noNameFunc := func(i int) int { // 無名関数を変数に渡している
+		return i + 10
+	} // 定義直後に()を使用していないので即時実行していない
+	fmt.Println(noNameFunc(sample)) // 無名関数を格納した変数に()と引数を渡して実行される
+
+	// 引数として使われる無名関数の定義
+	fn := func(file string) string {
+		return file + ".csv"
 	}
-	fmt.Printf("task1p: %T %+v %v\n", task1p, *task1p, unsafe.Sizeof(task1p)) // %Tで型取得、変数の頭に * をつけてポインタが示すアドレスに格納されている値を取得（この場合は直前で初期化された構造体）
+	// 無名関数をaddExtensionに渡してaddExtensionを実行
+	addExtension(fn, "sample")
 
-	(*task1p).Title = "Changed" // デリファレンスで構造体にアクセスして値を書き換えることが可能
-	fmt.Printf("task1p: %+v\n", *task1p)
+	fn2 := multiply()   // 無名関数を返り値とする関数を呼び出すと、返り値の無名関数が返ってくる（小泉構文）
+	fmt.Println(fn2(2)) // 格納された変数に()と引数を渡すと無名関数が実行される
 
-	task1.extendEstimate()
-	fmt.Printf("task1 value receiver: %+v\n", task1.Estimate)
-
-	task1.extendEstimatePointer()
-	fmt.Printf("task1 pointer receiver: %+v\n", task1.Estimate) // ポインタレシーバーを受け取る関数の処理では実体の値が変わっている
+	f3 := countUp() // f3 にcountUp()の返り値である無名関数が格納されている
+	for i := 1; i <= 5; i++ {
+		v := f3(2)
+		fmt.Printf("%v\n", v)
+	}
 }
 
 // receiver
@@ -191,4 +232,54 @@ func (task Task) extendEstimate() {
 // 実体に変更を加えたい場合はポインタレシーバーを使用する
 func (taskp *Task) extendEstimatePointer() {
 	taskp.Estimate += 10 // デリファレンスで実体にアクセスして、Estimateの値を変更している (*taskp).Estimate
+}
+
+// function defer
+// defer をつけた処理は関数が終了する直前に呼ばれる
+// 複数deferがある場合は下→上の順番で処理が実行される
+func funcDefer() {
+	defer fmt.Printf("main func final-finish\n")
+	defer fmt.Printf("main func semi-finish\n")
+	fmt.Printf("hello world\n")
+}
+
+func trimExtension(files ...string) []string { // 引数の型指定の頭に「...」をつけることでその型の任意の数の引数を受け取ることができる
+	out := make([]string, 0, len(files))
+	for _, f := range files {
+		out = append(out, strings.TrimSuffix(f, ".csv"))
+	}
+	return out
+}
+
+func fileChecker(name string) (string, error) { // 引数を複数返す関数を定義する場合は丸カッコとカンマで引数の型を指定する
+	f, err := os.Open(name) // os.Open()で指定ファイルを開く、第一戻り値には開いた際の参照、第二戻り値には開けなかった場合のエラーが格納される
+	if err != nil {
+		return "", errors.New("file not found") // 何らかのエラーが発生した場合は空文字とエラーメッセージを返している
+	}
+	defer f.Close()
+
+	return name, nil
+}
+
+// 無名関数を引数として受け取る関数の定義
+// 以下の関数 addExtensionは 文字列を受け取り文字列を返す無名関数と 任意の文字列を引数にとる関数として定義
+func addExtension(f func(file string) string, name string) {
+	fmt.Println(f(name)) // 第一引数の無名関数に第二引数で受け取った文字列を渡して呼び出している
+}
+
+// 無名関数を返り値とする関数の定義
+func multiply() func(int) int {
+	return func(i int) int {
+		return i * 1000
+	}
+}
+
+// closure
+// ある変数を関数内に格納することで、その関数以外の影響を受けないようにする
+func countUp() func(int) int {
+	count := 0
+	return func(n int) int {
+		count += n
+		return count
+	}
 }
