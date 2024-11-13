@@ -224,6 +224,26 @@ func main() {
 	stringp = &string            // ポインタ取得
 	fmt.Printf("%p\n", stringp)  // ポインタ出力
 	fmt.Printf("%v\n", *stringp) // デリファレンスにより値取得
+
+	// vehicle構造体の実体化
+	// ポインタ変数を使用して定義されたメソッドを呼び出すので変数にポインタを格納している
+	v := &vehicle{0, 5}
+
+	// speedUpAndDown() は controllerインターフェースを引数にとる関数
+	// vehicle構造体は controllerインターフェースに定義された関数を実装しており
+	// controllerインターフェース を実装しているとみなされる
+	// そのためspeedUpAndDown()の引数としてvehicle構造体の実体が使用可能となる
+	speedUpAndDown(v)
+
+	b := &bycycle{0, 5}
+	speedUpAndDown(b)
+
+	// String() を定義していない状態で変数に格納された値を出力すると値がそのままでる？
+	// Stringerインターフェースの String()を実装した状態で出力すると
+	// Println()内でStringerインターフェースの実装有無を判断し、実装している場合はその実装内容が出力される
+	// 以下の出力結果は、String()　を実装したいない状態だと「&{0,5}」だが
+	// String()を実装している状態だとその返り値が出力される
+	fmt.Println(v)
 }
 
 // receiver
@@ -288,4 +308,57 @@ func countUp() func(int) int {
 		count += n
 		return count
 	}
+}
+
+// interface
+// 型の一種 メソッドを定義できる
+type controller interface {
+	speedUp() int
+	speedDown() int
+}
+
+type vehicle struct {
+	speed       int
+	enginePower int
+}
+
+type bycycle struct {
+	speed      int
+	humanPower int
+}
+
+// ポインタレシーバーを使用して構造体の実体に対するメソッドを定義
+// vehicle構造体の実体のメソッドとしてspeedUp()とspeedDown()を実装
+// あるinterfaceに定義されているメソッドをすべて実装した型は
+// 自動的にそのinterfaceを実装したことになる
+// vehicle や bycycle は controllerインターフェースを実装したことになる
+func (v *vehicle) speedUp() int {
+	v.speed += 10 * v.enginePower
+	return v.speed
+}
+
+func (v *vehicle) speedDown() int {
+	v.speed -= 5 * v.enginePower
+	return v.speed
+}
+
+func (v vehicle) String() string {
+	return fmt.Sprintf("このvehicleのスピードは: %v (エンジンパワーは %v)", v.speed, v.enginePower)
+}
+
+func (b *bycycle) speedUp() int {
+	b.speed += 3 * b.humanPower
+	return b.speed
+}
+
+func (b *bycycle) speedDown() int {
+	b.speed -= 1 * b.humanPower
+	return b.speed
+}
+
+// controllerインターフェースを引数にとる関数を定義
+// 関数内で speedUp() と speedDown() を実行している
+func speedUpAndDown(c controller) {
+	fmt.Printf("current speed: %v\n", c.speedUp())
+	fmt.Printf("current speed: %v\n", c.speedDown())
 }
