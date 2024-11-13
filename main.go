@@ -218,6 +218,12 @@ func main() {
 		v := f3(2)
 		fmt.Printf("%v\n", v)
 	}
+
+	var stringp *string
+	string := "hello world"
+	stringp = &string            // ポインタ取得
+	fmt.Printf("%p\n", stringp)  // ポインタ出力
+	fmt.Printf("%v\n", *stringp) // デリファレンスにより値取得
 }
 
 // receiver
