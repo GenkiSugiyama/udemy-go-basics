@@ -291,7 +291,7 @@ loop: // 直下のfor文に名前を付けている
 		{price: 30},
 	}
 
-	for _, i := range items { // for ~ range で slice型の中身をひとつづつ取り出してコピーを渡している
+	for _, i := range items { // for ~ range で slice型の中身をひとつづつ取り出してコピーを渡している(1つ目の変数はインデックス、2つ目の変数はそのインデックスの位置にある要素の「コピー」)
 		i.price *= 1.1
 	}
 	fmt.Printf("%+v\n", items) // for ~ range で要素を受け取る変数には実体のコピーが渡されているため i の値が変わっても実体に影響はない（値は定義時のまま）
