@@ -180,70 +180,130 @@ func main() {
 	// task1.extendEstimatePointer()
 	// fmt.Printf("task1 pointer receiver: %+v\n", task1.Estimate) // ポインタレシーバーを受け取る関数の処理では実体の値が変わっている
 
-	funcDefer()
+	// funcDefer()
 
-	files := []string{"file1.csv", "file2.csv", "file3.csv"}
-	fmt.Println(trimExtension(files...))
+	// files := []string{"file1.csv", "file2.csv", "file3.csv"}
+	// fmt.Println(trimExtension(files...))
 
-	name, err := fileChecker("file.txt")
-	if err != nil {
-		fmt.Println(err)
-		return
+	// name, err := fileChecker("file.txt")
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
+	// fmt.Println(name)
+
+	// // 無名関数
+	// sample := 2
+	// func(i int) { // 関数の名前を定義していない
+	// 	fmt.Println(i)
+	// }(sample) // 定義直後に()と引数を渡すことで即時実行される
+
+	// noNameFunc := func(i int) int { // 無名関数を変数に渡している
+	// 	return i + 10
+	// } // 定義直後に()を使用していないので即時実行していない
+	// fmt.Println(noNameFunc(sample)) // 無名関数を格納した変数に()と引数を渡して実行される
+
+	// // 引数として使われる無名関数の定義
+	// fn := func(file string) string {
+	// 	return file + ".csv"
+	// }
+	// // 無名関数をaddExtensionに渡してaddExtensionを実行
+	// addExtension(fn, "sample")
+
+	// fn2 := multiply()   // 無名関数を返り値とする関数を呼び出すと、返り値の無名関数が返ってくる（小泉構文）
+	// fmt.Println(fn2(2)) // 格納された変数に()と引数を渡すと無名関数が実行される
+
+	// f3 := countUp() // f3 にcountUp()の返り値である無名関数が格納されている
+	// for i := 1; i <= 5; i++ {
+	// 	v := f3(2)
+	// 	fmt.Printf("%v\n", v)
+	// }
+
+	// var stringp *string
+	// string := "hello world"
+	// stringp = &string            // ポインタ取得
+	// fmt.Printf("%p\n", stringp)  // ポインタ出力
+	// fmt.Printf("%v\n", *stringp) // デリファレンスにより値取得
+
+	// // vehicle構造体の実体化
+	// // ポインタ変数を使用して定義されたメソッドを呼び出すので変数にポインタを格納している
+	// v := &vehicle{0, 5}
+
+	// // speedUpAndDown() は controllerインターフェースを引数にとる関数
+	// // vehicle構造体は controllerインターフェースに定義された関数を実装しており
+	// // controllerインターフェース を実装しているとみなされる
+	// // そのためspeedUpAndDown()の引数としてvehicle構造体の実体が使用可能となる
+	// speedUpAndDown(v)
+
+	// b := &bycycle{0, 5}
+	// speedUpAndDown(b)
+
+	// // String() を定義していない状態で変数に格納された値を出力すると値がそのままでる？
+	// // Stringerインターフェースの String()を実装した状態で出力すると
+	// // Println()内でStringerインターフェースの実装有無を判断し、実装している場合はその実装内容が出力される
+	// // 以下の出力結果は、String()　を実装したいない状態だと「&{0,5}」だが
+	// // String()を実装している状態だとその返り値が出力される
+	// fmt.Println(v)
+
+	// if
+	a := -1
+	if a == 0 {
+		fmt.Println("zero")
+	} else if a > 0 {
+		fmt.Println("positive")
+	} else if a < 0 {
+		fmt.Println("negative")
 	}
-	fmt.Println(name)
 
-	// 無名関数
-	sample := 2
-	func(i int) { // 関数の名前を定義していない
+	// for
+	for i := 0; i < 5; i++ {
 		fmt.Println(i)
-	}(sample) // 定義直後に()と引数を渡すことで即時実行される
-
-	noNameFunc := func(i int) int { // 無名関数を変数に渡している
-		return i + 10
-	} // 定義直後に()を使用していないので即時実行していない
-	fmt.Println(noNameFunc(sample)) // 無名関数を格納した変数に()と引数を渡して実行される
-
-	// 引数として使われる無名関数の定義
-	fn := func(file string) string {
-		return file + ".csv"
-	}
-	// 無名関数をaddExtensionに渡してaddExtensionを実行
-	addExtension(fn, "sample")
-
-	fn2 := multiply()   // 無名関数を返り値とする関数を呼び出すと、返り値の無名関数が返ってくる（小泉構文）
-	fmt.Println(fn2(2)) // 格納された変数に()と引数を渡すと無名関数が実行される
-
-	f3 := countUp() // f3 にcountUp()の返り値である無名関数が格納されている
-	for i := 1; i <= 5; i++ {
-		v := f3(2)
-		fmt.Printf("%v\n", v)
 	}
 
-	var stringp *string
-	string := "hello world"
-	stringp = &string            // ポインタ取得
-	fmt.Printf("%p\n", stringp)  // ポインタ出力
-	fmt.Printf("%v\n", *stringp) // デリファレンスにより値取得
+	// var i int
+	// for {
+	// 	if i > 3 {
+	// 		break
+	// 	}
+	// 	fmt.Println(i)
+	// 	i++
+	// 	time.Sleep(2 * time.Second)
+	// }
 
-	// vehicle構造体の実体化
-	// ポインタ変数を使用して定義されたメソッドを呼び出すので変数にポインタを格納している
-	v := &vehicle{0, 5}
+loop: // 直下のfor文に名前を付けている
+	for i := 0; i < 10; i++ {
+		switch i {
+		case 2:
+			continue //2,3のときは次の処理へスキップする
+		case 3:
+			continue
+		case 9:
+			break loop // 9 のときに 単純な break だけを書いてしまうと switch文を抜けることになるが名前を指定することで一番外のfor文から抜けることを明示している
+		default:
+			fmt.Printf("%v\n", i)
+		}
+	}
 
-	// speedUpAndDown() は controllerインターフェースを引数にとる関数
-	// vehicle構造体は controllerインターフェースに定義された関数を実装しており
-	// controllerインターフェース を実装しているとみなされる
-	// そのためspeedUpAndDown()の引数としてvehicle構造体の実体が使用可能となる
-	speedUpAndDown(v)
+	// for ~ range
+	items := []item{
+		{price: 10},
+		{price: 20},
+		{price: 30},
+	}
 
-	b := &bycycle{0, 5}
-	speedUpAndDown(b)
+	for _, i := range items { // for ~ range で slice型の中身をひとつづつ取り出してコピーを渡している
+		i.price *= 1.1
+	}
+	fmt.Printf("%+v\n", items) // for ~ range で要素を受け取る変数には実体のコピーが渡されているため i の値が変わっても実体に影響はない（値は定義時のまま）
 
-	// String() を定義していない状態で変数に格納された値を出力すると値がそのままでる？
-	// Stringerインターフェースの String()を実装した状態で出力すると
-	// Println()内でStringerインターフェースの実装有無を判断し、実装している場合はその実装内容が出力される
-	// 以下の出力結果は、String()　を実装したいない状態だと「&{0,5}」だが
-	// String()を実装している状態だとその返り値が出力される
-	fmt.Println(v)
+	for i := range items {
+		items[i].price *= 1.1 // 実体の値を変えたい場合は インデックスを使って実体に直接アクセスしたうえで処理を行う
+	}
+	fmt.Printf("%+v\n", items)
+}
+
+type item struct {
+	price float32
 }
 
 // receiver
