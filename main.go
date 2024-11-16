@@ -32,6 +32,10 @@ type Task struct {
 	Estimate int
 }
 
+// センチネルエラー
+// 特定のエラーを事前に定義しておくことで、エラー検知時に定義したエラーを細かく特定、キャッチすることができる
+var ErrCustom = errors.New("not found")
+
 func main() {
 	// i := 2
 	// ui := uint16(2)
@@ -246,60 +250,109 @@ func main() {
 	// fmt.Println(v)
 
 	// if
-	a := -1
-	if a == 0 {
-		fmt.Println("zero")
-	} else if a > 0 {
-		fmt.Println("positive")
-	} else if a < 0 {
-		fmt.Println("negative")
-	}
-
-	// for
-	for i := 0; i < 5; i++ {
-		fmt.Println(i)
-	}
-
-	// var i int
-	// for {
-	// 	if i > 3 {
-	// 		break
+	// 	a := -1
+	// 	if a == 0 {
+	// 		fmt.Println("zero")
+	// 	} else if a > 0 {
+	// 		fmt.Println("positive")
+	// 	} else if a < 0 {
+	// 		fmt.Println("negative")
 	// 	}
-	// 	fmt.Println(i)
-	// 	i++
-	// 	time.Sleep(2 * time.Second)
-	// }
 
-loop: // 直下のfor文に名前を付けている
-	for i := 0; i < 10; i++ {
-		switch i {
-		case 2:
-			continue //2,3のときは次の処理へスキップする
-		case 3:
-			continue
-		case 9:
-			break loop // 9 のときに 単純な break だけを書いてしまうと switch文を抜けることになるが名前を指定することで一番外のfor文から抜けることを明示している
-		default:
-			fmt.Printf("%v\n", i)
+	// 	// for
+	// 	for i := 0; i < 5; i++ {
+	// 		fmt.Println(i)
+	// 	}
+
+	// 	// var i int
+	// 	// for {
+	// 	// 	if i > 3 {
+	// 	// 		break
+	// 	// 	}
+	// 	// 	fmt.Println(i)
+	// 	// 	i++
+	// 	// 	time.Sleep(2 * time.Second)
+	// 	// }
+
+	// loop: // 直下のfor文に名前を付けている
+	// 	for i := 0; i < 10; i++ {
+	// 		switch i {
+	// 		case 2:
+	// 			continue //2,3のときは次の処理へスキップする
+	// 		case 3:
+	// 			continue
+	// 		case 9:
+	// 			break loop // 9 のときに 単純な break だけを書いてしまうと switch文を抜けることになるが名前を指定することで一番外のfor文から抜けることを明示している
+	// 		default:
+	// 			fmt.Printf("%v\n", i)
+	// 		}
+	// 	}
+
+	// 	// for ~ range
+	// 	items := []item{
+	// 		{price: 10},
+	// 		{price: 20},
+	// 		{price: 30},
+	// 	}
+
+	// 	for _, i := range items { // for ~ range で slice型の中身をひとつづつ取り出してコピーを渡している(1つ目の変数はインデックス、2つ目の変数はそのインデックスの位置にある要素の「コピー」)
+	// 		i.price *= 1.1
+	// 	}
+	// 	fmt.Printf("%+v\n", items) // for ~ range で要素を受け取る変数には実体のコピーが渡されているため i の値が変わっても実体に影響はない（値は定義時のまま）
+
+	// 	for i := range items {
+	// 		items[i].price *= 1.1 // 実体の値を変えたい場合は インデックスを使って実体に直接アクセスしたうえで処理を行う
+	// 	}
+	// 	fmt.Printf("%+v\n", items)
+
+	// error
+	error01 := errors.New("something wrong") // errors.New で errors.errorString構造体のアドレスを渡している（ポインタ）
+	error02 := errors.New("something wrong")
+	fmt.Printf("%[1]p, %[1]T, %[1]v\n", error01)
+	fmt.Println(error01.Error())
+	fmt.Println(error01 == error02)
+
+	// errorsのラップ
+	err0 := fmt.Errorf("add info: %w", error01) // %W を使って *errors.errorString をラップしている ラップ後の型は *fmt.wrapError となる
+	fmt.Printf("%[1]p, %[1]T, %[1]v\n", err0)
+	fmt.Println(errors.Unwrap(err0)) // *fmt.wrapError 型に対しては errors.Unwrap() を使えるため Unwrap により元の errors.errorString を取り出すことができる
+	fmt.Printf("%T\n", errors.Unwrap(err0))
+
+	err1 := fmt.Errorf("add info: %v", errors.New("original error"))
+	fmt.Printf("%[1]v, %[1]T\n", err1) // %v で wrap した *errors.errorString の型はそのまま
+	fmt.Println(errors.Unwrap(err1))   // *errors.errorString に対する Unwrap() はない、このように Unwrapすると nil を返す
+
+	// センチネルエラー を何段階かラップする
+	err2 := fmt.Errorf("in repository layer: %w", ErrCustom)
+	fmt.Println(err2)
+	err2 = fmt.Errorf("in service layer: %w", err2)
+	fmt.Println(err2)
+
+	// ラップされたセンチネルエラーとセンチネルエラーを直接比較することはできない
+	// errors.Is()を使用することでラップを自動的にアンラップして判定してくれる
+	if errors.Is(err2, ErrCustom) {
+		fmt.Println("matched")
+	}
+
+	file := "dummy.txt"
+	err3 := fileChecker(file)
+	if err3 != nil {
+		if errors.Is(err3, os.ErrNotExist) {
+			fmt.Println(err3)
+			fmt.Printf("%v is not found\n", file)
+		} else {
+			fmt.Println("unknown error")
 		}
 	}
+}
 
-	// for ~ range
-	items := []item{
-		{price: 10},
-		{price: 20},
-		{price: 30},
+func fileChecker(name string) error {
+	f, err := os.Open(name)
+	if err != nil {
+		return fmt.Errorf("in checker: %w", err)
 	}
-
-	for _, i := range items { // for ~ range で slice型の中身をひとつづつ取り出してコピーを渡している(1つ目の変数はインデックス、2つ目の変数はそのインデックスの位置にある要素の「コピー」)
-		i.price *= 1.1
-	}
-	fmt.Printf("%+v\n", items) // for ~ range で要素を受け取る変数には実体のコピーが渡されているため i の値が変わっても実体に影響はない（値は定義時のまま）
-
-	for i := range items {
-		items[i].price *= 1.1 // 実体の値を変えたい場合は インデックスを使って実体に直接アクセスしたうえで処理を行う
-	}
-	fmt.Printf("%+v\n", items)
+	defer f.Close()
+	return nil
 }
 
 type item struct {
@@ -337,15 +390,15 @@ func trimExtension(files ...string) []string { // 引数の型指定の頭に「
 	return out
 }
 
-func fileChecker(name string) (string, error) { // 引数を複数返す関数を定義する場合は丸カッコとカンマで引数の型を指定する
-	f, err := os.Open(name) // os.Open()で指定ファイルを開く、第一戻り値には開いた際の参照、第二戻り値には開けなかった場合のエラーが格納される
-	if err != nil {
-		return "", errors.New("file not found") // 何らかのエラーが発生した場合は空文字とエラーメッセージを返している
-	}
-	defer f.Close()
+// func fileChecker(name string) (string, error) { // 引数を複数返す関数を定義する場合は丸カッコとカンマで引数の型を指定する
+// 	f, err := os.Open(name) // os.Open()で指定ファイルを開く、第一戻り値には開いた際の参照、第二戻り値には開けなかった場合のエラーが格納される
+// 	if err != nil {
+// 		return "", errors.New("file not found") // 何らかのエラーが発生した場合は空文字とエラーメッセージを返している
+// 	}
+// 	defer f.Close()
 
-	return name, nil
-}
+// 	return name, nil
+// }
 
 // 無名関数を引数として受け取る関数の定義
 // 以下の関数 addExtensionは 文字列を受け取り文字列を返す無名関数と 任意の文字列を引数にとる関数として定義
