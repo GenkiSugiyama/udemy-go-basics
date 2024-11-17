@@ -2,9 +2,9 @@ package main
 
 import (
 	"errors"
-	"fmt"
+	"io"
+	"log"
 	"os"
-	"strings"
 )
 
 // const宣言は定数となる
@@ -306,172 +306,247 @@ func main() {
 	// 	fmt.Printf("%+v\n", items)
 
 	// error
-	error01 := errors.New("something wrong") // errors.New で errors.errorString構造体のアドレスを渡している（ポインタ）
-	error02 := errors.New("something wrong")
-	fmt.Printf("%[1]p, %[1]T, %[1]v\n", error01)
-	fmt.Println(error01.Error())
-	fmt.Println(error01 == error02)
+	// error01 := errors.New("something wrong") // errors.New で errors.errorString構造体のアドレスを渡している（ポインタ）
+	// error02 := errors.New("something wrong")
+	// fmt.Printf("%[1]p, %[1]T, %[1]v\n", error01)
+	// fmt.Println(error01.Error())
+	// fmt.Println(error01 == error02)
 
-	// errorsのラップ
-	err0 := fmt.Errorf("add info: %w", error01) // %W を使って *errors.errorString をラップしている ラップ後の型は *fmt.wrapError となる
-	fmt.Printf("%[1]p, %[1]T, %[1]v\n", err0)
-	fmt.Println(errors.Unwrap(err0)) // *fmt.wrapError 型に対しては errors.Unwrap() を使えるため Unwrap により元の errors.errorString を取り出すことができる
-	fmt.Printf("%T\n", errors.Unwrap(err0))
+	// // errorsのラップ
+	// err0 := fmt.Errorf("add info: %w", error01) // %W を使って *errors.errorString をラップしている ラップ後の型は *fmt.wrapError となる
+	// fmt.Printf("%[1]p, %[1]T, %[1]v\n", err0)
+	// fmt.Println(errors.Unwrap(err0)) // *fmt.wrapError 型に対しては errors.Unwrap() を使えるため Unwrap により元の errors.errorString を取り出すことができる
+	// fmt.Printf("%T\n", errors.Unwrap(err0))
 
-	err1 := fmt.Errorf("add info: %v", errors.New("original error"))
-	fmt.Printf("%[1]v, %[1]T\n", err1) // %v で wrap した *errors.errorString の型はそのまま
-	fmt.Println(errors.Unwrap(err1))   // *errors.errorString に対する Unwrap() はない、このように Unwrapすると nil を返す
+	// err1 := fmt.Errorf("add info: %v", errors.New("original error"))
+	// fmt.Printf("%[1]v, %[1]T\n", err1) // %v で wrap した *errors.errorString の型はそのまま
+	// fmt.Println(errors.Unwrap(err1))   // *errors.errorString に対する Unwrap() はない、このように Unwrapすると nil を返す
 
-	// センチネルエラー を何段階かラップする
-	err2 := fmt.Errorf("in repository layer: %w", ErrCustom)
-	fmt.Println(err2)
-	err2 = fmt.Errorf("in service layer: %w", err2)
-	fmt.Println(err2)
+	// // センチネルエラー を何段階かラップする
+	// err2 := fmt.Errorf("in repository layer: %w", ErrCustom)
+	// fmt.Println(err2)
+	// err2 = fmt.Errorf("in service layer: %w", err2)
+	// fmt.Println(err2)
 
-	// ラップされたセンチネルエラーとセンチネルエラーを直接比較することはできない
-	// errors.Is()を使用することでラップを自動的にアンラップして判定してくれる
-	if errors.Is(err2, ErrCustom) {
-		fmt.Println("matched")
-	}
+	// // ラップされたセンチネルエラーとセンチネルエラーを直接比較することはできない
+	// // errors.Is()を使用することでラップを自動的にアンラップして判定してくれる
+	// if errors.Is(err2, ErrCustom) {
+	// 	fmt.Println("matched")
+	// }
 
-	file := "dummy.txt"
-	err3 := fileChecker(file)
-	if err3 != nil {
-		if errors.Is(err3, os.ErrNotExist) {
-			fmt.Println(err3)
-			fmt.Printf("%v is not found\n", file)
-		} else {
-			fmt.Println("unknown error")
-		}
-	}
-}
+	// file := "dummy.txt"
+	// err3 := fileChecker(file)
+	// if err3 != nil {
+	// 	if errors.Is(err3, os.ErrNotExist) {
+	// 		fmt.Println(err3)
+	// 		fmt.Printf("%v is not found\n", file)
+	// 	} else {
+	// 		fmt.Println("unknown error")
+	// 	}
+	// }
 
-func fileChecker(name string) error {
-	f, err := os.Open(name)
+	// fmt.Printf("%v\n", add(1, 3))
+	// fmt.Printf("%v\n", add(1.2, 1.3))
+
+	// fmt.Printf("%v\n", min(2, 3))
+
+	// // Key, Valueがそれぞれ異なる map の Value の計算結果を求めるのにジェネリクスを活用した関数を作る
+	// m1 := map[string]uint{
+	// 	"A": 1,
+	// 	"B": 2,
+	// 	"C": 3,
+	// }
+	// m2 := map[int]float32{
+	// 	1: 1.23,
+	// 	2: 4.56,
+	// 	3: 7.89,
+	// }
+
+	// fmt.Printf("%v\n", sumValues(m1))
+	// fmt.Printf("%v\n", sumValues(m2))
+
+	// logger
+	file, err := os.Create("log.txt")
 	if err != nil {
-		return fmt.Errorf("in checker: %w", err)
+		log.Fatalln(err)
 	}
-	defer f.Close()
-	return nil
+	defer file.Close()
+
+	flags := log.Lshortfile // log に エラーが発生したコードの行数を出力するオプション
+
+	// ログの生成
+	// log.New(io.Writer, 先頭につける任意の文字列（prefix）, フラグ設定) // 今回はio.MultiWriterで ファイルと標準出力どちらにもログ出力の設定、事前に定義したフラグ設定を読み込み
+	warnLogger := log.New(io.MultiWriter(file, os.Stderr), "WARN: ", flags)
+
+	// エラーログの生成
+	errorLogger := log.New(io.MultiWriter(file, os.Stderr), "ERROR: ", flags)
+
+	// ログの出力
+	warnLogger.Println("warning A")
+	errorLogger.Fatalln("critical error")
 }
 
-type item struct {
-	price float32
-}
-
-// receiver
-// 値レシーバーを持つ関数
-// Goではある型の実体に対する関数を定義できる
-// そのメソッドが受け取る型の実体をレシーバーと呼ぶ
-// 値レシーバーを受け取る関数で実体の値を変えても、実際は受け取ったレシーバーのコピーに対して変更を加えるため、実体には影響がない
-func (task Task) extendEstimate() {
-	task.Estimate += 10
-}
-
-// 実体に変更を加えたい場合はポインタレシーバーを使用する
-func (taskp *Task) extendEstimatePointer() {
-	taskp.Estimate += 10 // デリファレンスで実体にアクセスして、Estimateの値を変更している (*taskp).Estimate
-}
-
-// function defer
-// defer をつけた処理は関数が終了する直前に呼ばれる
-// 複数deferがある場合は下→上の順番で処理が実行される
-func funcDefer() {
-	defer fmt.Printf("main func final-finish\n")
-	defer fmt.Printf("main func semi-finish\n")
-	fmt.Printf("hello world\n")
-}
-
-func trimExtension(files ...string) []string { // 引数の型指定の頭に「...」をつけることでその型の任意の数の引数を受け取ることができる
-	out := make([]string, 0, len(files))
-	for _, f := range files {
-		out = append(out, strings.TrimSuffix(f, ".csv"))
-	}
-	return out
-}
-
-// func fileChecker(name string) (string, error) { // 引数を複数返す関数を定義する場合は丸カッコとカンマで引数の型を指定する
-// 	f, err := os.Open(name) // os.Open()で指定ファイルを開く、第一戻り値には開いた際の参照、第二戻り値には開けなかった場合のエラーが格納される
+// func fileChecker(name string) error {
+// 	f, err := os.Open(name)
 // 	if err != nil {
-// 		return "", errors.New("file not found") // 何らかのエラーが発生した場合は空文字とエラーメッセージを返している
+// 		return fmt.Errorf("in checker: %w", err)
 // 	}
 // 	defer f.Close()
-
-// 	return name, nil
+// 	return nil
 // }
 
-// 無名関数を引数として受け取る関数の定義
-// 以下の関数 addExtensionは 文字列を受け取り文字列を返す無名関数と 任意の文字列を引数にとる関数として定義
-func addExtension(f func(file string) string, name string) {
-	fmt.Println(f(name)) // 第一引数の無名関数に第二引数で受け取った文字列を渡して呼び出している
-}
+// type item struct {
+// 	price float32
+// }
 
-// 無名関数を返り値とする関数の定義
-func multiply() func(int) int {
-	return func(i int) int {
-		return i * 1000
+// // receiver
+// // 値レシーバーを持つ関数
+// // Goではある型の実体に対する関数を定義できる
+// // そのメソッドが受け取る型の実体をレシーバーと呼ぶ
+// // 値レシーバーを受け取る関数で実体の値を変えても、実際は受け取ったレシーバーのコピーに対して変更を加えるため、実体には影響がない
+// func (task Task) extendEstimate() {
+// 	task.Estimate += 10
+// }
+
+// // 実体に変更を加えたい場合はポインタレシーバーを使用する
+// func (taskp *Task) extendEstimatePointer() {
+// 	taskp.Estimate += 10 // デリファレンスで実体にアクセスして、Estimateの値を変更している (*taskp).Estimate
+// }
+
+// // function defer
+// // defer をつけた処理は関数が終了する直前に呼ばれる
+// // 複数deferがある場合は下→上の順番で処理が実行される
+// func funcDefer() {
+// 	defer fmt.Printf("main func final-finish\n")
+// 	defer fmt.Printf("main func semi-finish\n")
+// 	fmt.Printf("hello world\n")
+// }
+
+// func trimExtension(files ...string) []string { // 引数の型指定の頭に「...」をつけることでその型の任意の数の引数を受け取ることができる
+// 	out := make([]string, 0, len(files))
+// 	for _, f := range files {
+// 		out = append(out, strings.TrimSuffix(f, ".csv"))
+// 	}
+// 	return out
+// }
+
+// // func fileChecker(name string) (string, error) { // 引数を複数返す関数を定義する場合は丸カッコとカンマで引数の型を指定する
+// // 	f, err := os.Open(name) // os.Open()で指定ファイルを開く、第一戻り値には開いた際の参照、第二戻り値には開けなかった場合のエラーが格納される
+// // 	if err != nil {
+// // 		return "", errors.New("file not found") // 何らかのエラーが発生した場合は空文字とエラーメッセージを返している
+// // 	}
+// // 	defer f.Close()
+
+// // 	return name, nil
+// // }
+
+// // 無名関数を引数として受け取る関数の定義
+// // 以下の関数 addExtensionは 文字列を受け取り文字列を返す無名関数と 任意の文字列を引数にとる関数として定義
+// func addExtension(f func(file string) string, name string) {
+// 	fmt.Println(f(name)) // 第一引数の無名関数に第二引数で受け取った文字列を渡して呼び出している
+// }
+
+// // 無名関数を返り値とする関数の定義
+// func multiply() func(int) int {
+// 	return func(i int) int {
+// 		return i * 1000
+// 	}
+// }
+
+// // closure
+// // ある変数を関数内に格納することで、その関数以外の影響を受けないようにする
+// func countUp() func(int) int {
+// 	count := 0
+// 	return func(n int) int {
+// 		count += n
+// 		return count
+// 	}
+// }
+
+// // interface
+// // 型の一種 メソッドを定義できる
+// type controller interface {
+// 	speedUp() int
+// 	speedDown() int
+// }
+
+// type vehicle struct {
+// 	speed       int
+// 	enginePower int
+// }
+
+// type bycycle struct {
+// 	speed      int
+// 	humanPower int
+// }
+
+// // ポインタレシーバーを使用して構造体の実体に対するメソッドを定義
+// // vehicle構造体の実体のメソッドとしてspeedUp()とspeedDown()を実装
+// // あるinterfaceに定義されているメソッドをすべて実装した型は
+// // 自動的にそのinterfaceを実装したことになる
+// // vehicle や bycycle は controllerインターフェースを実装したことになる
+// func (v *vehicle) speedUp() int {
+// 	v.speed += 10 * v.enginePower
+// 	return v.speed
+// }
+
+// func (v *vehicle) speedDown() int {
+// 	v.speed -= 5 * v.enginePower
+// 	return v.speed
+// }
+
+// func (v vehicle) String() string {
+// 	return fmt.Sprintf("このvehicleのスピードは: %v (エンジンパワーは %v)", v.speed, v.enginePower)
+// }
+
+// func (b *bycycle) speedUp() int {
+// 	b.speed += 3 * b.humanPower
+// 	return b.speed
+// }
+
+// func (b *bycycle) speedDown() int {
+// 	b.speed -= 1 * b.humanPower
+// 	return b.speed
+// }
+
+// // controllerインターフェースを引数にとる関数を定義
+// // 関数内で speedUp() と speedDown() を実行している
+// func speedUpAndDown(c controller) {
+// 	fmt.Printf("current speed: %v\n", c.speedUp())
+// 	fmt.Printf("current speed: %v\n", c.speedDown())
+// }
+
+// // ジェネリクス 引数や返り値の型を任意に決められる仕組み
+// type customConstrains interface {
+// 	int | int16 | float32 | float64 | string
+// }
+
+// func add[T customConstrains](x, y T) T { // この add() の引数や返り値のデータ型である T は customConstrains インターフェースを満たすという制約が付く
+// 	return x + y
+// }
+
+// func min[T constraints.Ordered](x, y T) T {
+// 	if x < y {
+// 		return x
+// 	}
+// 	return y
+// }
+
+// func sumValues[K int | string, V constraints.Float | constraints.Integer](m map[K]V) V {
+// 	var sum V
+// 	for _, v := range m { // map を for range で取り出すとKey, Valueの順番で値が返ってくる
+// 		sum += v
+// 	}
+// 	return sum
+// }
+
+// Unit Test
+func Add(x, y int) int {
+	return x + y
+}
+func Divide(x, y int) float32 {
+	if y == 0 {
+		return 0.
 	}
-}
-
-// closure
-// ある変数を関数内に格納することで、その関数以外の影響を受けないようにする
-func countUp() func(int) int {
-	count := 0
-	return func(n int) int {
-		count += n
-		return count
-	}
-}
-
-// interface
-// 型の一種 メソッドを定義できる
-type controller interface {
-	speedUp() int
-	speedDown() int
-}
-
-type vehicle struct {
-	speed       int
-	enginePower int
-}
-
-type bycycle struct {
-	speed      int
-	humanPower int
-}
-
-// ポインタレシーバーを使用して構造体の実体に対するメソッドを定義
-// vehicle構造体の実体のメソッドとしてspeedUp()とspeedDown()を実装
-// あるinterfaceに定義されているメソッドをすべて実装した型は
-// 自動的にそのinterfaceを実装したことになる
-// vehicle や bycycle は controllerインターフェースを実装したことになる
-func (v *vehicle) speedUp() int {
-	v.speed += 10 * v.enginePower
-	return v.speed
-}
-
-func (v *vehicle) speedDown() int {
-	v.speed -= 5 * v.enginePower
-	return v.speed
-}
-
-func (v vehicle) String() string {
-	return fmt.Sprintf("このvehicleのスピードは: %v (エンジンパワーは %v)", v.speed, v.enginePower)
-}
-
-func (b *bycycle) speedUp() int {
-	b.speed += 3 * b.humanPower
-	return b.speed
-}
-
-func (b *bycycle) speedDown() int {
-	b.speed -= 1 * b.humanPower
-	return b.speed
-}
-
-// controllerインターフェースを引数にとる関数を定義
-// 関数内で speedUp() と speedDown() を実行している
-func speedUpAndDown(c controller) {
-	fmt.Printf("current speed: %v\n", c.speedUp())
-	fmt.Printf("current speed: %v\n", c.speedDown())
+	return float32(x) / float32(y)
 }

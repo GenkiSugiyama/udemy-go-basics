@@ -1,0 +1,2 @@
+WARN: main.go:385: warning A
+ERROR: main.go:386: critical error
